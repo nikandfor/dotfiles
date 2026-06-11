@@ -1,0 +1,85 @@
+# vim
+.*.swp
+.*.swo
+
+# hide all hidden files?
+.*
+
+!.gitignore
+
+*.out
+*.wasm
+
+# python
+*.pyc
+
+# big binaries
+*.o
+*.a
+*.so
+*.deb
+*.rpm
+
+*.db
+*.xrain
+*.bbolt
+
+# logs, traces
+*.log
+*.bench
+*.pprof
+*.mprof
+*.trace
+*.txt
+*.json
+*.yaml
+
+!openapi.yaml
+!system.yaml
+!debug.yaml
+
+!deno.json
+!deno.jsonc
+
+*.tl
+*.tlog
+*.tlz
+*.eazy
+
+*.flagfile
+*.ff
+
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.zst
+
+*.crt
+*.cer
+*.key
+
+*.linux
+
+# golang
+vendor/
+*.test
+go.work
+go.work.sum
+
+# dev
+venv
+dist
+
+!.github
+!.github/**
+!.circleci
+!.circleci/**
+
+!compose.yaml
+!compose
+!compose/**
+
+!CMakeLists.txt
+!requirements.txt
