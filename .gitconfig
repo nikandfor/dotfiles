@@ -1,0 +1,32 @@
+[include]
+	path = ~/.gitconfig.local
+
+[color]
+	ui = auto
+[core]
+	editor = vim
+	excludesfile = ~/.gitignore
+[alias]
+	hist = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an]\" --graph --date=short --date-order --all
+	histonly = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an]\" --graph --date=short --date-order
+	histsigned = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an] %G?\" --graph --date=short --date-order --all
+	signoff = rebase --exec "git commit --amend --no-edit -S"
+	st = status
+	co = checkout
+	sw = switch
+	ci = commit
+	br = branch
+[push]
+	default = current
+[pull]
+	ff = only
+[diff]
+	tool = vim
+[merge]
+	tool = vim
+[credential]
+	helper = store
+[http]
+	cookiefile = ~/.gitcookies
+[init]
+	defaultBranch = main

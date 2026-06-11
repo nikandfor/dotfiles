@@ -1,0 +1,55 @@
+
+command = /opt/homebrew/bin/bash
+
+theme = 3024 Night
+theme = Abernathy
+theme = Apple System Colors
+theme = Adwaita Dark
+theme = Argonaut
+theme = Atom
+theme = Builtin Tango Dark
+theme = Dark Pastel
+theme = Deep
+theme = Dimidium
+theme = Embers Dark
+theme = Everblush
+theme = Nvim Dark
+theme = Snazzy
+theme = Nightfox
+theme = Carbonfox
+theme = my
+
+background-opacity = 0.75
+background-blur = 3
+#background = black
+
+macos-titlebar-style = tabs
+#maximize = true
+window-width = 200
+window-height = 28
+window-position-y = 0
+window-position-x = 0
+window-padding-x = 5
+window-padding-y = 2, 4
+#macos-titlebar-style = hidden
+
+font-size = 12.5
+font-feature = -calt
+cursor-style = block
+minimum-contrast = 1.1
+
+undo-timeout = 60s
+selection-clear-on-typing = false
+bell-features = no-system, no-attention
+macos-auto-secure-input = true
+
+keybind = global:cmd+escape=toggle_quick_terminal
+keybind = cmd+arrow_right=next_tab
+keybind = cmd+arrow_left=previous_tab
+keybind = cmd+shift+arrow_right=move_tab:1
+keybind = cmd+shift+arrow_left=move_tab:-1
+
+quick-terminal-size = 65%
+quick-terminal-animation-duration = 0
+
+macos-option-as-alt = right
