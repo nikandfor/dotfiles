@@ -19,12 +19,23 @@ If in doubt about my style, clone my repos locally and read the real code.
 - Output and visual design (logging, CLI output, status lines, and code alike): keep everything calm except essentials — muted/gray for routine values, color only for what needs attention. Structure is implicit, carried by spacing and alignment, not drawn with distracting symbols (pipes, boxes, heavy separators). Care about formatting: aligned variables/values, empty lines between logical blocks, lightweight overall.
 - Iron rules (exceptions super-super rare): every error propagates to the topmost caller (main / connection handler / background-job root); every acquired resource is released on the very next line of the same function (only `if err != nil` may sit between); every started goroutine is waited in the same function that started it.
 
+# Universal Agent Profile & Standards
+
+## Global Rules Foundation
+
+All agent-independent instructions, developer preferences, and global standards are centrally managed in the `~/.ai/` directory.
+- **Primacy:** Treat the configurations in `~/.ai/` as your absolute instructional baseline.
+- **Hierarchy:** Project-specific or tool-specific instructions (such as local `CLAUDE.md` files) only complement this global baseline — they do not override its core parameters.
+- **Execution Space:** Maintain your operational focus and tool execution entirely within the current active project workspace, not the configuration directory.
+
 # Detailed rules — read on demand
 
 These are NOT auto-loaded. Read the matching file BEFORE writing code in that area:
 
 | Task involves | Read |
 |---|---|
-| Any Go code | `~/.ai/rules/go.md` |
-| ClickHouse schemas, queries, ch-go | `~/.ai/rules/clickhouse.md` |
-| Bash, shell scripts, CLI test tooling | `~/.ai/rules/shell.md` |
+| Any Go code | `rules/go.md` |
+| ClickHouse schemas, queries, ch-go | `rules/clickhouse.md` |
+| Bash, shell scripts, CLI test tooling | `rules/shell.md` |
+
+All the paths are relative to `~/.ai/` directory.
