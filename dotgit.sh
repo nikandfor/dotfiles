@@ -5,10 +5,10 @@
 #	dotgit install [-d dir] [-u url] [-b branch] [-l bin] [-n]
 #	                                            clone repo if missing, link dotgit into bin
 #	dotgit [status]                             available collections and their state
-#	dotgit fetch [args]                         fetch updates from the remote
+#	dotgit main [args]                          run commands in main worktree
 #	dotgit add <collection>                     attach collection: check out into $HOME
 #	dotgit detach <collection>                  detach collection, files in $HOME are kept
-#	dotgit <collection> <git args ...>          git aimed at one collection: dotgit base status
+#	dotgit <collection> <git args ...>          git aimed at one collection: dotgit home/base status
 
 repo="${DOTFILES:-$HOME/.config/dotfiles}"
 url="${url:-https://github.com/nikandfor/dotfiles}"
@@ -22,15 +22,38 @@ precheck() {
 	test -e "$repo/.git" || { echo "no repo at $repo"; return 1; }
 }
 
-fetch() {
-	git --git-dir="$repo/.git" fetch "$@"
+verifyref() {
+	rootgit rev-parse -q --verify "refs/$1" >/dev/null
+}
+
+rootgit() {
+	git -C "$repo" "$@"
+}
+
+# worktree dir for a collection; flat name, git scans only one level
+# under worktrees/ and commondir is relative
+wtdir() {
+	echo "$repo/.git/worktrees/$(echo "$1" | tr / -)"
 }
 
 dotgit() {
 	local br="$1"
+	local gitdir="$(wtdir "$1")"
 	shift
 
-	git --git-dir="$repo/.git/worktrees/$br" --work-tree="$HOME" "$@"
+	if test -e "$gitdir"; then
+		: # we are fine
+	elif verifyref "heads/$br"; then
+		echo "collection is not attached. to attach run:"
+		echo "  $0 add $br"
+		return 1
+	else
+		echo "unknown collection. maybe to fetch updates:"
+		echo "  $0 main fetch"
+		return 1
+	fi
+
+	git --git-dir="$gitdir" --work-tree="$HOME" "$@"
 }
 
 install() {
@@ -85,18 +108,18 @@ status() {
 	local br wt att st sync n
 
 	for br in $({
-		git --git-dir="$repo/.git" for-each-ref --format='%(refname:lstrip=2)' refs/heads/home/*
-		git --git-dir="$repo/.git" for-each-ref --format='%(refname:lstrip=3)' refs/remotes/*/home/*
-	} | sort -u); do
-		if ! git --git-dir="$repo/.git" rev-parse -q --verify "refs/heads/$br" >/dev/null; then
-			printf '%-14s %-11s %s\n' "$br" "" "remote only"
+		rootgit for-each-ref --format='%(refname:lstrip=2)' refs/heads
+		rootgit for-each-ref --format='%(refname:lstrip=3)' refs/remotes
+	} | grep / | sort -u); do
+		wt="$(wtdir "$br")"
+		att=-
+		st=
+
+		if ! verifyref "heads/$br"; then
+			printf '%-14s %-11s %s\n' "$br" "$att" "remote only"
 			continue
 		fi
 
-		wt="$repo/.git/worktrees/${br#home/}"
-
-		att=-
-		st=
 		if test -e "$wt/HEAD"; then
 			att=attached
 			n=$(git --git-dir="$wt" --work-tree="$HOME" status --porcelain -uno | wc -l)
@@ -104,9 +127,9 @@ status() {
 		fi
 
 		sync="no remote"
-		if git --git-dir="$repo/.git" rev-parse -q --verify "refs/remotes/$remote/$br" >/dev/null; then
-			sync=$(git --git-dir="$repo/.git" rev-list --count --left-right "$br...$remote/$br" |
-				xargs sh -c 'test "$1" = 0 || a=" ($1 ahead)"
+		if verifyref "remotes/$remote/$br"; then
+			sync=$(rootgit rev-list --count --left-right "$br...$remote/$br" |
+				xargs sh -c 'test "$1" = 0 || a=" (+$1 ahead)"
 					test "$2" = 0 && echo "up to date$a" || echo "new version available$a"' sync)
 		fi
 
@@ -114,18 +137,21 @@ status() {
 	done
 }
 
-add() {
-	precheck || return 1
+addone() {
+	case "$1" in
+	*/*) ;;
+	*) echo "collection is a branch of the form group/name: $1"; return 1 ;;
+	esac
 
-	wt="$repo/.git/worktrees/$1"
+	wt="$(wtdir "$1")"
 
-	git -C "$repo" branch -q --track "home/$1" "$remote/home/$1" 2>/dev/null ||
-		git -C "$repo" branch -q "home/$1" --set-upstream-to "$remote/home/$1" ||
-		return 1
+	rootgit branch -q --track "$1" "$remote/$1" 2>/dev/null ||
+		rootgit branch -q "$1" --set-upstream-to "$remote/$1" 2>/dev/null ||
+		{ echo "unknown collection: $1"; return 1; }
 
 	mkdir -p "$wt"
 
-	echo "ref: refs/heads/home/$1" > "$wt/HEAD"
+	echo "ref: refs/heads/$1" > "$wt/HEAD"
 	echo "../.." > "$wt/commondir"
 	echo "$HOME/.git" > "$wt/gitdir" # fake backpointer, makes `git worktree list` and branch protection work
 	echo "work tree is $HOME, managed by dotgit" > "$wt/locked"
@@ -135,10 +161,20 @@ add() {
 	return 1
 }
 
+add() {
+	precheck || return 1
+
+	local col
+
+	for col in "$@"; do
+		addone "$col" || return 1
+	done
+}
+
 detach() {
 	precheck || return 1
 
-	rm -rf "$repo/.git/worktrees/$1"
+	rm -rf "$(wtdir "$1")"
 }
 
 main() {
@@ -161,8 +197,8 @@ main() {
 	install)
 		install "$@"
 		;;
-	fetch)
-		fetch "$@"
+	main)
+		rootgit "$@"
 		;;
 	*)
 		dotgit "$cmd" "$@"

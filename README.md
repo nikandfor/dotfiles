@@ -1,11 +1,11 @@
 # dotfiles
 
 Collection of dotfiles + managing script. Collections:
-* base - shell, git, terminal, ...
-* ai   - AGENTS.md, rules, ...
+* home/base - shell, git, terminal, ...
+* home/ai   - AGENTS.md, rules, ...
 
 Script adds/removes one or more collection to $HOME.
-Collection is a git branch under the hood, which is checked out treating home directory as a worktree.
+Collection is a git branch of the form group/name, checked out with the home directory as its work tree.
 No other files are affected.
 
 ## Install
@@ -25,18 +25,18 @@ git clone https://github.com/nikandfor/dotfiles ~/.config/dotfiles
 dotgit --help
 
 dotgit install                      # clone repo if not yet; link dotgit command to ~/.local/bin
-dotgit fetch                        # fetch updates from remote repo
+dotgit main fetch                   # fetch updates from remote repo
 
 dotgit [status]                     # available collections and their status
-dotgit add ai                       # checkout and attach collection
-dotgit detach ai                    # detach collection: stop tracking files; but keep them
+dotgit add home/ai                  # checkout and attach collection
+dotgit detach home/ai               # detach collection: stop tracking files; but keep them
 
-dotgit ai status                    # any git command, aimed at one branch
-dotgit ai commit -am 'update rules'
-dotgit ai push
+dotgit home/ai status               # any git command, aimed at one branch
+dotgit home/ai commit -am 'update rules'
+dotgit home/ai push
 
-dotgit base fetch                   # one fetch serves all branches
-dotgit base pull                    # apply updates to ~ (ff-only)
-dotgit base checkout -- .bashrc     # discard a local change
-dotgit base reset --hard 'home/base@{1}'  # roll back, e.g. after a bad pull
+dotgit home/base fetch              # one fetch serves all branches
+dotgit home/base pull               # apply updates to ~ (ff-only)
+dotgit home/base checkout -- .bashrc      # discard a local change
+dotgit home/base reset --hard 'home/base@{1}'  # roll back, e.g. after a bad pull
 ```
