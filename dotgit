@@ -1,0 +1,147 @@
+#!/bin/sh
+
+# Manages dotfiles branches (home/* namespace) checked out into $HOME as git worktrees.
+#
+#	dotgit                          show attached worktrees, clean or dirty
+#	dotgit add                      list config branches (home/*) available to attach
+#	dotgit add [-f] <branch ...>    clone if needed, attach branches by simple name
+#	dotgit rm <branch ...>          detach branches; files in ~ and local branches are kept
+#	dotgit <branch> <git args ...>  git for one branch: dotgit base status
+#
+# add keeps existing files in ~ untouched: they show as modifications in
+# `dotgit <branch> status`, checkout what you want selectively. With -f
+# branch content overwrites ~.
+
+# Each branch gets a hand-made linked worktree at .git/worktrees/<branch> with
+# the work tree pointed at ~. git itself refuses `worktree add` into a non-empty
+# directory, but the on-disk format handles it fine.
+
+repo="${DOTFILES:-$HOME/.config/dotfiles}"
+url="${url:-https://github.com/nikandfor/dotfiles}"
+
+_status=0
+
+if [ -t 2 ]; then
+	bold="$(printf '\033[1m')"
+	sgr0="$(printf '\033[0m')"
+fi
+
+run() {
+	echo "$bold$*$sgr0" >&2
+	"$@"
+}
+
+fail() {
+	echo "FAILED: $*" >&2
+	_status=1
+}
+
+usage() { sed -n '3,13p' "$0" >&2; }
+
+status() {
+	if ! [ -e "$repo/.git" ]; then
+		fail "no repo at $repo, run dotgit add"
+		return
+	fi
+
+	found=
+
+	for wt in "$repo/.git/worktrees"/*; do
+		[ -e "$wt/HEAD" ] || continue
+		found=1
+
+		n="$(git --git-dir "$wt" --work-tree "$HOME" status --porcelain -uno | wc -l)"
+		if [ "$n" = 0 ]; then st=clean; else st="dirty ($n)"; fi
+
+		printf '%-8s %s\n' "${wt##*/}" "$st"
+	done
+
+	[ -n "$found" ] || echo "no worktrees attached, run dotgit add" >&2
+}
+
+list() {
+	{
+		git -C "$repo" for-each-ref --format='%(refname:lstrip=3)' refs/heads/home
+		git -C "$repo" for-each-ref --format='%(refname:lstrip=4)' refs/remotes/origin/home
+	} | sort -u |
+	while read -r b; do
+		st=
+		[ -e "$repo/.git/worktrees/$b/HEAD" ] && st=attached
+
+		printf '%-8s %s\n' "$b" "$st"
+	done
+}
+
+add() {
+	wt="$repo/.git/worktrees/$1"
+
+	git -C "$repo" rev-parse -q --verify "refs/heads/home/$1" >/dev/null ||
+	run git -C "$repo" branch --track "home/$1" "origin/home/$1" ||
+	{ fail "branch home/$1"; return; }
+
+	mkdir -p "$wt"
+	echo "ref: refs/heads/home/$1" > "$wt/HEAD"
+	echo "../.." > "$wt/commondir"
+	echo "$HOME/.git" > "$wt/gitdir" # fake backpointer, makes `git worktree list` and branch protection work
+	echo "work tree is $HOME, managed by dotgit" > "$wt/locked"
+
+	if [ -n "$force" ]; then
+		run git --git-dir "$wt" --work-tree "$HOME" checkout -f || fail "checkout $1"
+	else
+		run git --git-dir "$wt" --work-tree "$HOME" reset -q || fail "reset $1"
+	fi
+}
+
+case "$1" in
+'' | status)
+	status
+	exit "$_status"
+	;;
+-h | --help)
+	usage
+	echo >&2
+	status
+	exit "$_status"
+	;;
+add | rm)
+	cmd="$1"
+	shift
+	;;
+*)
+	wt="$repo/.git/worktrees/$1"
+	[ -e "$wt/HEAD" ] || { fail "no worktree $1, run dotgit add"; exit "$_status"; }
+
+	shift
+	exec git --git-dir "$wt" --work-tree "$HOME" "$@"
+	;;
+esac
+
+force=
+branches=
+
+for a in "$@"; do
+	case "$a" in
+	-f) force=1 ;;
+	*) branches="$branches $a" ;;
+	esac
+done
+
+if [ "$cmd" = add ] && ! [ -e "$repo/.git" ]; then
+	run git clone -b readme "$url" "$repo" || exit 1
+fi
+
+if [ "$cmd" = add ] && [ -z "$branches" ]; then
+	list
+	exit "$_status"
+fi
+
+[ -n "$branches" ] || { fail "$cmd: branch name required"; exit "$_status"; }
+
+for b in $branches; do
+	case "$cmd" in
+	add) add "$b" ;;
+	rm) run rm -rf "$repo/.git/worktrees/$b" ;;
+	esac
+done
+
+exit "$_status"
