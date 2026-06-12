@@ -8,32 +8,40 @@
 #	dotgit main [args]                          run commands in main worktree
 #	dotgit add <collection>                     attach collection: check out into $HOME
 #	dotgit detach <collection>                  detach collection, files in $HOME are kept
+#	dotgit new <collection>                     create new empty collection branch
 #	dotgit <collection> <git args ...>          git aimed at one collection: dotgit home/base status
 
-repo="${DOTFILES:-$HOME/.config/dotfiles}"
+# the checked out repo the script itself is part of; empty when piped (curl | sh)
+selfrepo() {
+	local self
+	self="$(dirname "$(realpath "$0" 2>/dev/null)")"
+
+	test -e "$self/dotgit.sh" && test -e "$self/.git" && echo "$self"
+}
+
+repo="${DOTFILES:-$(selfrepo)}"
+repo="${repo:-$HOME/.config/dotfiles}"
 url="${url:-https://github.com/nikandfor/dotfiles}"
 remote="${remote:-origin}"
 
 usage() {
-	sed -n '3,11p' "$0"
+	sed -n '3,12p' "$0"
 }
 
 precheck() {
 	test -e "$repo/.git" || { echo "no repo at $repo"; return 1; }
 }
 
-verifyref() {
-	rootgit rev-parse -q --verify "refs/$1" >/dev/null
-}
-
 rootgit() {
 	git -C "$repo" "$@"
 }
 
-# worktree dir for a collection; flat name, git scans only one level
-# under worktrees/ and commondir is relative
+verifyref() {
+	rootgit rev-parse -q --verify "refs/$1" >/dev/null
+}
+
 wtdir() {
-	echo "$repo/.git/worktrees/$(echo "$1" | tr / -)"
+	echo "$repo/.git/worktrees/$(echo "$1" | tr / -)" # flatten worktree name for git
 }
 
 dotgit() {
@@ -53,7 +61,7 @@ dotgit() {
 		return 1
 	fi
 
-	git --git-dir="$gitdir" --work-tree="$HOME" "$@"
+	git --git-dir="$gitdir" --work-tree="$HOME" "${@:-status}"
 }
 
 install() {
@@ -86,10 +94,11 @@ install() {
 		} ||
 		return 1
 
+	# restore the branch to the remote state; refuses if changed or untracked
+	# files are in the way
 	if test -e "$loc/.git"; then
 		git -C "$loc" fetch "$rem" "$branch" &&
-		git -C "$loc" checkout -q -f -B "$branch" FETCH_HEAD &&
-		git -C "$loc" clean -qfd
+		git -C "$loc" checkout -q -B "$branch" FETCH_HEAD
 	else
 		git clone "$rem" "$loc" -b "$branch"
 	fi || return 1
@@ -147,6 +156,7 @@ addone() {
 
 	rootgit branch -q --track "$1" "$remote/$1" 2>/dev/null ||
 		rootgit branch -q "$1" --set-upstream-to "$remote/$1" 2>/dev/null ||
+		verifyref "heads/$1" ||
 		{ echo "unknown collection: $1"; return 1; }
 
 	mkdir -p "$wt"
@@ -156,9 +166,23 @@ addone() {
 	echo "$HOME/.git" > "$wt/gitdir" # fake backpointer, makes `git worktree list` and branch protection work
 	echo "work tree is $HOME, managed by dotgit" > "$wt/locked"
 
-	dotgit "$1" reset -q &&
-	dotgit "$1" pull --ff-only ||
-	return 1
+	dotgit "$1" reset -q || return 1
+
+	# local-only collection, nothing to pull
+	verifyref "remotes/$remote/$1" || return 0
+
+	dotgit "$1" pull --ff-only || return 1
+}
+
+newcol() {
+	precheck || return 1
+
+	case "$1" in
+	*/*) ;;
+	*) echo "collection is a branch of the form group/name: $1"; return 1 ;;
+	esac
+
+	rootgit branch "$1" "$(rootgit commit-tree -m "new collection: $1" "$(rootgit mktree </dev/null)")"
 }
 
 add() {
@@ -199,6 +223,9 @@ main() {
 		;;
 	main)
 		rootgit "$@"
+		;;
+	new)
+		newcol "$@"
 		;;
 	*)
 		dotgit "$cmd" "$@"
