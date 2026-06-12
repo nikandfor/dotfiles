@@ -94,17 +94,16 @@ fi
 # fix green not readable background to o+w dirs
 #export LS_COLORS=$LS_COLORS:"ow=34;40"
 
+export PATH="$HOME/.local/bin:$PATH"
+
 export GOPROXY=direct
-export GOPATH=$HOME/.go
-export GOBIN=$GOPATH/bin
-export PATH=$GOBIN:$PATH
+export GOPATH="$HOME/.go"
+export GOBIN="$GOPATH/bin"
+export PATH="$GOBIN:$PATH"
 export GOWORK=off
 export COMPOSE_BAKE=true
 
 alias gochroma="chroma -l go -f terminal256 -s rrt"
-
-# dotfiles branches checked out into ~, see ${DOTFILES:-~/.config/dotfiles}
-alias dotgit='${DOTFILES:-$HOME/.config/dotfiles}/dotgit'
 
 cgodoc() {
 	go doc "$@" | gochroma
