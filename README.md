@@ -11,7 +11,7 @@ No other files are affected.
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/nikandfor/dotfiles/readme/dotgit.sh | sh -s install
+curl -fsSL https://raw.githubusercontent.com/nikandfor/dotfiles/main/dotgit.sh | sh -s install
 # or
 git clone https://github.com/nikandfor/dotfiles ~/.config/dotfiles
 

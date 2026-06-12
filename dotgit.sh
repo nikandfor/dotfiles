@@ -37,7 +37,7 @@ install() {
 
 	loc=
 	rem="$url"
-	branch=readme
+	branch=main
 	binpath=~/.local/bin
 	noinstall=
 
