@@ -12,6 +12,7 @@
 
 repo="${DOTFILES:-$HOME/.config/dotfiles}"
 url="${url:-https://github.com/nikandfor/dotfiles}"
+remote="${remote:-origin}"
 
 usage() {
 	sed -n '3,11p' "$0"
@@ -70,6 +71,8 @@ install() {
 		git clone "$rem" "$loc" -b "$branch"
 	fi || return 1
 
+	git -C "$loc" config status.showUntrackedFiles no
+
 	test -n "$noinstall" || {
 		mkdir -p "$binpath" &&
 		ln -sf "$loc/dotgit.sh" "$binpath"/dotgit
@@ -101,8 +104,8 @@ status() {
 		fi
 
 		sync="no remote"
-		if git --git-dir="$repo/.git" rev-parse -q --verify "refs/remotes/origin/$br" >/dev/null; then
-			sync=$(git --git-dir="$repo/.git" rev-list --count --left-right "$br...origin/$br" |
+		if git --git-dir="$repo/.git" rev-parse -q --verify "refs/remotes/$remote/$br" >/dev/null; then
+			sync=$(git --git-dir="$repo/.git" rev-list --count --left-right "$br...$remote/$br" |
 				xargs sh -c 'test "$1" = 0 || a=" ($1 ahead)"
 					test "$2" = 0 && echo "up to date$a" || echo "new version available$a"' sync)
 		fi
@@ -116,8 +119,9 @@ add() {
 
 	wt="$repo/.git/worktrees/$1"
 
-	git -C "$repo" rev-parse -q --verify "refs/heads/home/$1" >/dev/null ||
-		git -C "$repo" branch --track "home/$1" "origin/home/$1" || return 1
+	git -C "$repo" branch -q --track "home/$1" "$remote/home/$1" 2>/dev/null ||
+		git -C "$repo" branch -q "home/$1" --set-upstream-to "$remote/home/$1" ||
+		return 1
 
 	mkdir -p "$wt"
 
@@ -126,7 +130,9 @@ add() {
 	echo "$HOME/.git" > "$wt/gitdir" # fake backpointer, makes `git worktree list` and branch protection work
 	echo "work tree is $HOME, managed by dotgit" > "$wt/locked"
 
-	dotgit "$1" reset -q || return 1
+	dotgit "$1" reset -q &&
+	dotgit "$1" pull --ff-only ||
+	return 1
 }
 
 detach() {
