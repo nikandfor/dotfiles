@@ -28,7 +28,7 @@ Before taking action or parsing project code, you must discover and adapt to the
 1. **Instructional Hierarchy:** This `AGENTS.md` file defines your core cognitive baseline. Tool-specific profiles (like a local `CLAUDE.md`) only complement this file; they never override it.
 2. **Environment Layering:** You must look for an active environment configuration directory at `~/.ai/env/`. If it exists, it contains localized instructions regarding the host machine, user identity, and team-specific overrides.
 3. **Token Optimization Hint:** Do not read files in this directory one by one. Execute the following single shell command to batch-ingest all active environment files in alphabetical order with clear filename headers:
-   `test -d .ai/env && find ~/.ai/env -maxdepth 1 -name '*.md' -print0 | sort -z | xargs -0 -r head -vn 1000`
+   `test -d ~/.ai/env && find ~/.ai/env -maxdepth 3 -name '*.md' -print0 | sort -z | xargs -0 -r head -vn 1000`
 4. **Execution Focus:** Keep your operational tool actions (writing files, running tests) restricted strictly to your active project workspace directory, not the configuration space.
 
 # Detailed rules — read on demand
