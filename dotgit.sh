@@ -62,8 +62,13 @@ install() {
 		} ||
 		return 1
 
-	test -e "$loc/.git" ||
-		git clone "$rem" "$loc" -b "$branch" || return 1
+	if test -e "$loc/.git"; then
+		git -C "$loc" fetch "$rem" "$branch" &&
+		git -C "$loc" checkout -q -f -B "$branch" FETCH_HEAD &&
+		git -C "$loc" clean -qfd
+	else
+		git clone "$rem" "$loc" -b "$branch"
+	fi || return 1
 
 	test -n "$noinstall" || {
 		mkdir -p "$binpath" &&
