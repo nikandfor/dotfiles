@@ -103,6 +103,9 @@ export COMPOSE_BAKE=true
 
 alias gochroma="chroma -l go -f terminal256 -s rrt"
 
+# dotfiles branches checked out into ~, see ${DOTFILES:-~/.config/dotfiles}
+alias dotgit='${DOTFILES:-$HOME/.config/dotfiles}/dotgit'
+
 cgodoc() {
 	go doc "$@" | gochroma
 }
