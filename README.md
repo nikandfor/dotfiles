@@ -50,6 +50,10 @@ dotgit [status]                     # available collections and their status
 dotgit add home/ai                  # attach collection and check it out
 dotgit detach home/ai               # detach collection: stop tracking files; but keep them unchanged
 
+dotgit ls home/ai                   # list files in collection
+dotgit cat home/ai .ai/AGENTS.md    # cat file content
+dotgit cat home/ai .ai/AGENTS.md >.claude/CLAUDE.md
+
 dotgit home/ai status               # any git command, aimed at one branch
 dotgit home/ai commit -am 'update rules'
 dotgit home/ai push
@@ -58,4 +62,23 @@ dotgit home/base fetch              # one fetch serves all branches
 dotgit home/base pull               # apply updates to ~ (ff-only)
 dotgit home/base checkout -- .bashrc      # discard a local change
 dotgit home/base reset --hard 'home/base@{1}'  # roll back, e.g. after a bad pull
+
+
+# new collection/backup
+dotgit new backup/laptop            # creating new collection
+dotgit add backup/laptop            # attaching it
+
+# adding some files
+dotgit backup/laptop add -f .vimrc .tmux.conf
+
+# or all the files existing in given collections
+dotgit backup/laptop add -f $(dotgit ls home/base home/ai)
+
+# normal git operations
+dotgit backup/laptop status
+dotgit backup/laptop commit -m "all_feb_12th"
+dotgit backup/laptop push origin
+
+# restore folder
+dotgit backup/laptop checkout -- .ai/
 ```

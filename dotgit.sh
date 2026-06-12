@@ -9,6 +9,8 @@
 #	dotgit add <collection>                     attach collection: check out into $HOME
 #	dotgit detach <collection>                  detach collection, files in $HOME are kept
 #	dotgit new <collection>                     create new empty collection branch
+#	dotgit ls <collection ...>                  list files tracked by collections
+#	dotgit cat <collection> <file ...>          print file contents from collection
 #	dotgit <collection> <git args ...>          git aimed at one collection: dotgit home/base status
 
 # the checked out repo the script itself is part of; empty when piped (curl | sh)
@@ -25,7 +27,7 @@ url="${url:-https://github.com/nikandfor/dotfiles}"
 remote="${remote:-origin}"
 
 usage() {
-	sed -n '3,12p' "$0"
+	sed -n '3,14p' "$0"
 }
 
 precheck() {
@@ -38,6 +40,10 @@ rootgit() {
 
 verifyref() {
 	rootgit rev-parse -q --verify "refs/$1" >/dev/null
+}
+
+precollection() {
+	verifyref "heads/$1" || { echo "unknown collection $1"; return 1; }
 }
 
 wtdir() {
@@ -201,6 +207,33 @@ detach() {
 	rm -rf "$(wtdir "$1")"
 }
 
+lscol() {
+	precheck || return 1
+
+	local col
+
+	for col in "$@"; do
+		precollection "$col" || return 1
+
+		rootgit ls-tree -r --name-only "$col"
+	done
+}
+
+catcol() {
+	precheck || return 1
+
+	local col f
+
+	col="$1"
+	shift
+
+	precollection "$col" || return 1
+
+	for f in "$@"; do
+		rootgit show "$col:$f" || return 1
+	done
+}
+
 main() {
 	cmd="$1"
 	test "$#" = 0 || shift
@@ -226,6 +259,12 @@ main() {
 		;;
 	new)
 		newcol "$@"
+		;;
+	ls)
+		lscol "$@"
+		;;
+	cat)
+		catcol "$@"
 		;;
 	*)
 		dotgit "$cmd" "$@"
