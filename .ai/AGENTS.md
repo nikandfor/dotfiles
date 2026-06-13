@@ -11,8 +11,10 @@ If in doubt about my style, clone my repos locally and read the real code.
 - No concurrency, channels, or goroutines unless genuinely needed. Sequential first.
 - Reuse memory heavily: caller-provided buffers, `buf[:0]`, Reset methods, long-lived structs.
 - Avoid 3rd-party dependencies. Write the 15-line helper instead of importing it. Exceptions: official clients and genuinely big projects (don't reimplement ClickHouse drivers or TLS).
+- Explicit over implicit. Always know exactly what the code does, and a reader must see what it does right away — no hidden control flow, no magic, no indirection that hides the actual behavior. This is the root of several rules below: concrete types over interfaces-just-for-interfaces, no channel/event-coordinator indirection, goroutines waited where they're started (so you know *if* and *when* they finished), every resource released on the next visible line, explicit file/dependency lists over wildcard globs. When a choice is between stating something plainly and letting a framework do it invisibly, state it plainly.
 - No foreign practices. Java patterns, clean/hexagonal architecture, DI frameworks, interface-everywhere, repository/service/controller layering — all rejected. Go canon is go.dev only: Effective Go, CodeReviewComments, the spec. Not blogs, not courses, not "enterprise best practices".
 - Don't define abstractions before they're needed. Concrete first; generalize on the second or third real duplication.
+- Fold, then make reusable and configurable. Once something has actually recurred (per the rule above), collapse the copies into one thing with extension points rather than forks — the same instinct at every scale: shared logic becomes one configurable function, a broadly useful package gets extracted and open-sourced, one test harness + script set serves every setup (local, docker, CI). Shrink the surface by consolidating; keep flexibility through configuration (env vars, args, struct fields, compose overlays), not by branching into variants. Reuse over duplication, configuration over forking.
 - Superseded code and commented-out debug lines are parked temporarily, not forever: keep old versions (`//go:build ignore`) and debug prints around while the new code matures — they're quick reference for importing solutions into the rewrite — then clean them up once it's stable and works fine.
 - Panic loudly on can't-happen (with the offending value), accumulate/return quietly on expected failure.
 - Errors and misuse: errors are for input/environment problems; panics are for programmer bugs.
@@ -40,5 +42,8 @@ These are NOT auto-loaded. Read the matching file BEFORE writing code in that ar
 | Any Go code | `rules/go.md` |
 | ClickHouse schemas, queries, ch-go | `rules/clickhouse.md` |
 | Bash, shell scripts, CLI test tooling | `rules/shell.md` |
+| OpenAPI specs, interactive API docs for Go services | `rules/openapi.md` |
+| Dockerfile, compose, GitHub deploy workflow for Go services | `rules/docker.md` |
+| Shell integration tests, test scripts, testlib.sh harness | `rules/scripts.md` |
 
 All the paths in this table are relative to `~/.ai/` directory.
