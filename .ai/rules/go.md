@@ -63,8 +63,10 @@ Extracted from my repos (json2, cbor, batch, bufq, mux, websocket, socks5, grace
 
 ## Concurrency — last resort
 
+The Go face of *explicit over implicit* (AGENTS.md): concurrency hides control flow, so it's the last resort, and where it's unavoidable the flow is made visible — goroutines waited where started, channels avoided as event coordinators.
+
 - Default is sequential, linear code. Reach for concurrency only when genuinely needed.
-- When needed: `sync.Mutex` + `sync.Cond` + plain ints. Channels almost never inside libraries — only app-level fan-in (buffered to exact capacity, first-error-wins drain).
+- When needed: `sync.Mutex` + `sync.Cond` + plain ints. Channels almost never inside libraries — only app-level fan-in (buffered to exact capacity, first-error-wins drain). No channels as event/coordination buses: you can't see who runs when.
 - My trademark lock idiom — defer written ABOVE Lock:
   ```go
   defer q.mu.Unlock()
