@@ -1,0 +1,10 @@
+{
+  "name": "Dark ANSI Cold",
+  "base": "dark-ansi",
+  "overrides": {
+    "claude": "ansi:whiteBright",
+    "claudeShimmer": "ansi:blackBright",
+    "claudeBlue_FOR_SYSTEM_SPINNER": "ansi:whiteBright",
+    "claudeBlueShimmer_FOR_SYSTEM_SPINNER": "ansi:blackBright"
+  }
+}

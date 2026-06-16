@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(~/.ai/**)",
+      "Bash(cat ~/.ai/**)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/.claude/statusline.py"
+  },
+  "enabledPlugins": {},
+  "effortLevel": "medium",
+  "awaySummaryEnabled": false,
+  "theme": "custom:dark-ansi-cold",
+  "autoCompactEnabled": false
+}
