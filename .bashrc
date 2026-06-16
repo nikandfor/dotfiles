@@ -28,33 +28,38 @@ if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-# set a fancy prompt (non-color, unless we know we "want" color)
-case "$TERM" in
-    xterm-color | xterm-256color)
-		color_prompt=yes
-		;;
-	*)
-		if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-			color_prompt=yes
-		fi
-		;;
-esac
-
-if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\e[01;36m\]\h\[\e[00m\]@\[\e[33m\]\t\[\e[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ '
+if [[ -t 1 ]] &&
+	command -v tput >/dev/null 2>&1 &&
+	(( $(tput colors 2>/dev/null || echo 0) >= 8 )); then
+	__color_prompt() {
+		echo -n '\[\e['"$1"'m\]'
+		echo -n "$2"
+		echo -n '\[\e[0m\]'
+	}
 else
-    PS1='${debian_chroot:+($debian_chroot)}\h:\w\$ '
+	__color_prompt() {
+		echo -n "$2"
+	}
 fi
-unset color_prompt
 
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
+__prompt_command() {
+	local exit=$?
+
+	PS1='${debian_chroot:+($debian_chroot)}'
+	! test -f .bashrc_singleusermode && {
+		PS1+="$(__color_prompt '1;36' '\u')"
+			PS1+='-'
+		}
+	PS1+="$(__color_prompt '1;36' '\h')"
+	PS1+='@'
+	PS1+="$(__color_prompt '33' '\t')"
+	PS1+=':'
+	PS1+="$(__color_prompt '1;34' '\W')"
+	(( exit != 0 )) && PS1+=$(__color_prompt '1;31' "✘$exit")
+	PS1+='\$ '
+}
+
+PROMPT_COMMAND=__prompt_command
 
 #test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 #
@@ -75,18 +80,26 @@ alias vim=nvim
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
 if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
+	. ~/.bash_aliases
 fi
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-    . /etc/bash_completion
+	. /etc/bash_completion
 fi
 
 if [ -f ~/.bash_work ]; then
-    . ~/.bash_work
+	. ~/.bash_work
+fi
+
+if [ -d ~/.bashrc.d ]; then
+	for f in ~/.bashrc.d/*; do
+		[ -e "$f" ] &&
+		[ -f "$f" ] &&
+		source "$f"
+	done
 fi
 
 # my settings
