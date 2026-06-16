@@ -158,13 +158,16 @@ addone() {
 	*) echo "collection is a branch of the form group/name: $1"; return 1 ;;
 	esac
 
-	wt="$(wtdir "$1")"
-
-	rootgit branch -q --track "$1" "$remote/$1" 2>/dev/null ||
-		rootgit branch -q "$1" --set-upstream-to "$remote/$1" 2>/dev/null ||
-		verifyref "heads/$1" ||
+	verifyref "heads/$1" || verifyref "remotes/$remote/$1" ||
 		{ echo "unknown collection: $1"; return 1; }
 
+	verifyref "heads/$1" ||
+		rootgit branch -q "$1" root
+
+	verifyref "remotes/$remote/$1" &&
+		rootgit branch -q "$1" --set-upstream-to "$remote/$1" >/dev/null
+
+	wt="$(wtdir "$1")"
 	mkdir -p "$wt"
 
 	echo "ref: refs/heads/$1" > "$wt/HEAD"
@@ -172,12 +175,37 @@ addone() {
 	echo "$HOME/.git" > "$wt/gitdir" # fake backpointer, makes `git worktree list` and branch protection work
 	echo "work tree is $HOME, managed by dotgit" > "$wt/locked"
 
-	dotgit "$1" reset -q || return 1
-
 	# local-only collection, nothing to pull
 	verifyref "remotes/$remote/$1" || return 0
 
-	dotgit "$1" pull --ff-only || return 1
+	local GIT_INDEX_FILE="$wt/snap.index"
+
+	tree="$(
+		export GIT_INDEX_FILE
+		rm -f "$GIT_INDEX_FILE"
+
+		dotgit "$1" read-tree "$remote/$1"
+		dotgit "$1" add -u
+		dotgit "$1" write-tree
+	)"
+
+	rm -f "$GIT_INDEX_FILE"
+
+	tiptree="$(rootgit rev-parse "$1^{tree}")"
+
+	if [ "$tree" != "$tiptree" ]; then
+		backup=$(
+			export GIT_COMMITTER_NAME=dotgit
+			export GIT_COMMITTER_EMAIL="dotgit@nikand.dev"
+
+			rootgit commit-tree "$tree" -p "$1" -m "pre-attach backup $1"
+		)
+
+		uniq=$(rootgit rev-parse --short "$backup")
+		rootgit update-ref "refs/dotgit/$1/orig_$uniq" "$backup"
+	fi
+
+	dotgit "$1" reset -q --hard "$remote/$1"
 }
 
 newcol() {
