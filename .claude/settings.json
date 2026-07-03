@@ -2,16 +2,21 @@
   "permissions": {
     "allow": [
       "Read(~/.ai/**)",
-      "Bash(cat ~/.ai/**)"
+      "Bash(cat ~/.ai/**)",
+      "Bash(gofmt -l *)",
+      "Bash(gofmt -w *)"
     ]
   },
   "statusLine": {
     "type": "command",
     "command": "python3 ~/.claude/statusline.py"
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true
+  },
   "effortLevel": "medium",
   "awaySummaryEnabled": false,
+  "tui": "fullscreen",
   "theme": "custom:dark-ansi-cold",
   "autoCompactEnabled": false
 }

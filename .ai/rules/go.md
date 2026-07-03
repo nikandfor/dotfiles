@@ -85,6 +85,7 @@ The Go face of *explicit over implicit* (AGENTS.md): concurrency hides control f
 - Receivers: single letter matching role (`d` decoder, `e` encoder, `w` writer, `r` reader, `c` conn/command, `l` logger, `s` span/scope, `p` package-ctx). `tb` for `*testing.T` AND `*testing.B`.
 - Cursor vocabulary: `b` buffer, `st` start, `i` position, `end`, `l` length, `n`, `tag`, `sub`, `raw`, `off`, `v` value, `x` the any-typed node, `tr` tlog span, `q` scratch/secondary. Maps named by mapping: `l2i`, `renm`.
 - Unexported helpers: lowercase single words (`valsize`, `skipVal`, `seekObj`).
+- One concept, one name — everywhere, so identical operations read verbatim across the codebase. Name a local by what the value IS, not by where it sits; the same quantity reached two different ways (e.g. read from an accessor vs. freshly computed to pass into a constructor) shares the one name — don't invent a synonym for a concept that already has one. When two values of the same concept appear together, keep the base names and add a role prefix (left/right operand → `loff, ln` and `roff, rn`); don't truncate to ad-hoc short forms. Distinct concepts keep distinct names (a byte span's length is not a container's element count). Accessor methods and struct fields keep their own API names — that's a separate namespace from the local-variable convention.
 - MixedCaps always; no Get prefix; initialisms keep case (`ID`, `URL`); no stutter (`bufio.Reader` not `bufio.BufReader`).
 - Files: lowercase single noun per concern (`iterator.go`, `conn_read.go`, `unsafe.go`). Packages: short lowercase single words (`ir`, `tp`, `df`, `set`). FORBIDDEN package names: util, common, misc, helpers, types, api, interfaces.
 
@@ -93,6 +94,7 @@ The Go face of *explicit over implicit* (AGENTS.md): concurrency hides control f
 - Flat packages. No `internal/`, no `pkg/`, no layered trees. Repo root = the package. Subpackages only for genuinely separate things.
 - One file ≈ one concern/pass. A 1300-line file is fine if it's one pass; a 300-line switch is NOT split for size.
 - Every file: ONE `type ( ... )` block at top (even for one type), then grouped `const`/`var` blocks (iota, binary literals with underscores for masks, section comments), constructors, methods.
+- Order declarations top-down by importance/size: the main type and its primary entry points first, then progressively smaller/lower-level helpers (encoders, accessors, bit-twiddlers) last — a reader meets the big picture before the details.
 - Struct field order: embedded io/codec first, exported config fields, then mutex as visual divider, then protected scratch buffers below (`// end of mu` comment when mutex is mid-struct).
 - Local func literals instead of methods for one-use helpers, defined where needed; immediately-invoked when computing a value.
 - Big pipelines (compiler-scale): flat arena of nodes addressed by integer ids (`Expr int`, `Exprs []any`, parallel slices), `const Nil Expr = -1`, negative sentinels for lookups. Ids over pointers. Context threading by struct embedding chains, not parameter lists.
@@ -105,6 +107,7 @@ The Go face of *explicit over implicit* (AGENTS.md): concurrency hides control f
 - `goto again` / labels (`break authloop`, `goto restart`) used without apology where they simplify.
 - Named results for defer-modified errors and doc clarity; bare `return` in short funcs.
 - Single-statement funcs on one line.
+- Increment an index/counter AFTER every operation in the step that uses it (the appends, the comparisons), not before — the counter advances once the slot it names is fully done.
 
 ## Interfaces
 
@@ -129,7 +132,7 @@ The Go face of *explicit over implicit* (AGENTS.md): concurrency hides control f
 ## Testing
 
 - stdlib `testing` first; testify/assert or my `nikandfor/assert` where convenient; zero-dep repos use plain `tb.Errorf("wanted %v, got %v", ...)`.
-- Table tests: anonymous struct slice INLINE in the for statement, no named `tests` var.
+- Table tests: anonymous struct slice INLINE in the for statement, no named `tests` var. Omit an expected field when it equals the input (keyed literal `{in: ...}`); default it to the input in the loop (`want := tc.out; if want == "" { want = tc.in }`) — like jqparser's `testParser`/`testParser2` pair.
 - Round-trips are the core method: encode → compare bytes (hex verbs `%x`, `%#x`, `%[1]`) → decode → compare value + final index.
 - Concurrency: stress tests — N goroutines × M iterations, `runtime.Gosched()` injections, scripted panics, final invariant check; CI runs `go test -race -count=1000`.
 - Fuzzing for parsers, differential against stdlib. Benchmarks with `ReportAllocs`; alloc count is a tracked feature.

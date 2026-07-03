@@ -15,6 +15,7 @@ If in doubt about my style, clone my repos locally and read the real code.
 - No foreign practices. Java patterns, clean/hexagonal architecture, DI frameworks, interface-everywhere, repository/service/controller layering — all rejected. Go canon is go.dev only: Effective Go, CodeReviewComments, the spec. Not blogs, not courses, not "enterprise best practices".
 - Don't define abstractions before they're needed. Concrete first; generalize on the second or third real duplication.
 - Fold, then make reusable and configurable. Once something has actually recurred (per the rule above), collapse the copies into one thing with extension points rather than forks — the same instinct at every scale: shared logic becomes one configurable function, a broadly useful package gets extracted and open-sourced, one test harness + script set serves every setup (local, docker, CI). Shrink the surface by consolidating; keep flexibility through configuration (env vars, args, struct fields, compose overlays), not by branching into variants. Reuse over duplication, configuration over forking.
+- Only the core is required; everything else is optional and stubbable at init. A non-core dependency (a database, a store) is reached through a small interface with a trivial in-memory implementation, so the system runs with nothing external wired up. An optional side-service (auth, telemetry) is checked for at the seam: present → use it; absent → skip the action or return the default, never hard-fail. Nothing external is nailed down — backends, storage (localStorage/sessionStorage/IndexedDB), API base URLs are swappable and namespaced (e.g. a `?ns=` prefix) so tabs, configs, and test runs stay isolated.
 - Superseded code and commented-out debug lines are parked temporarily, not forever: keep old versions (`//go:build ignore`) and debug prints around while the new code matures — they're quick reference for importing solutions into the rewrite — then clean them up once it's stable and works fine.
 - Panic loudly on can't-happen (with the offending value), accumulate/return quietly on expected failure.
 - Errors and misuse: errors are for input/environment problems; panics are for programmer bugs.
@@ -40,10 +41,13 @@ These are NOT auto-loaded. Read the matching file BEFORE writing code in that ar
 | Task involves | Read |
 |---|---|
 | Any Go code | `rules/go.md` |
+| Front-end / web UI (Deno, Lit, browser tests) | `rules/frontend.md` |
 | ClickHouse schemas, queries, ch-go | `rules/clickhouse.md` |
 | Bash, shell scripts, CLI test tooling | `rules/shell.md` |
 | OpenAPI specs, interactive API docs for Go services | `rules/openapi.md` |
 | Dockerfile, compose, GitHub deploy workflow for Go services | `rules/docker.md` |
 | Shell integration tests, test scripts, testlib.sh harness | `rules/scripts.md` |
+| Creating, updating, or running tests (any language) | `rules/testing.md` |
+| Setting up how a project is run/dev-served/built/tested (sandboxing) | `rules/sandbox.md` |
 
 All the paths in this table are relative to `~/.ai/` directory.
