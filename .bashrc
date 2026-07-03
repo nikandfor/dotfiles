@@ -116,7 +116,7 @@ export PATH="$GOBIN:$PATH"
 export GOWORK=off
 export COMPOSE_BAKE=true
 
-alias gochroma="chroma -l go -f terminal256 -s rrt"
+alias gochroma="chroma -l go -f terminal256 -s swapoff"
 
 cgodoc() {
 	go doc "$@" | gochroma

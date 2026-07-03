@@ -28,3 +28,4 @@
 	cookiefile = ~/.gitcookies
 [init]
 	defaultBranch = main
+	#defaultObjectFormat = sha256
