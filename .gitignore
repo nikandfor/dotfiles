@@ -9,6 +9,7 @@
 
 *.out
 *.wasm
+*.bak
 
 # python
 *.pyc
@@ -32,6 +33,8 @@
 *.trace
 *.txt
 *.json
+*.jsonl
+*.ndjson
 *.yaml
 
 !openapi.yaml
@@ -67,6 +70,11 @@ vendor/
 *.test
 go.work
 go.work.sum
+
+# zig
+zig-out/
+zig-pkg
+.zig-cache/
 
 # dev
 venv
