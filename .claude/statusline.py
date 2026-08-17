@@ -1,4 +1,4 @@
-import json, sys, time, os
+import json, sys, time, os, getpass, socket
 
 yellow, red, dim, plain = "33", "31", "2", ""
 
@@ -25,7 +25,7 @@ def tok(n):
 
 def ctx(d):
     pct = d["context_window"]["used_percentage"]
-    return color(f"ctx {pct}%", by_level(pct))
+    return color(f"ctx {pct:.1f}%", by_level(pct))
 
 def usage(d):
     u = d["context_window"]["current_usage"]
@@ -43,12 +43,18 @@ def cost(d, prev):
     api_mins = round(d["cost"]["total_api_duration_ms"] / 60000)
     wall_mins = round(d["cost"]["total_duration_ms"] / 60000)
     last = total - prev.get("cost", {}).get("total_cost_usd", 0)
-    return sep.join([color(f"${total:.2f}", dim), f"${last:.3f}", color(f"api {dur(api_mins)}", dim), color(f"wall {dur(wall_mins)}", dim)])
+    return sep.join([
+        color(f"${total:.2f}", dim),
+        color(f"api {dur(api_mins)}", dim),
+        color(f"wall {dur(wall_mins)}", dim)])
 
 def limit(d, key, label, tfmt):
     w = d["rate_limits"][key]
     reset = time.strftime(tfmt, time.localtime(w["resets_at"]))
-    return color(f"{label} {w['used_percentage']}%", by_level(w["used_percentage"])) + color(f" ↻{reset}", dim)
+    return color(f"{label} {w['used_percentage']:.1f}%", by_level(w["used_percentage"])) + color(f" ↻{reset}", dim)
+
+def host(d):
+    return color(f"{getpass.getuser()}@{socket.gethostname()}", dim)
 
 def cwd(d):
     path = d.get("workspace", {}).get("current_dir") or d.get("cwd") or os.getcwd()
@@ -56,6 +62,9 @@ def cwd(d):
     if path.startswith(home):
         path = "~" + path[len(home):]
     return color(path, dim)
+
+def model(d):
+    return color(d["model"]["display_name"], dim)
 
 d = json.load(sys.stdin)
 
@@ -76,7 +85,9 @@ for part in [ctx,
              lambda d: limit(d, "five_hour", "5h", "%H:%M"),
              lambda d: limit(d, "seven_day", "7d", "%a"),
              usage,
-             cwd]:
+             host,
+             cwd,
+             model]:
     try:
         parts.append(part(d))
     except KeyError:

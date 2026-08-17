@@ -5,6 +5,11 @@ I'm nikandfor (`nikand.dev`, `tlog.app`). I write minimal, simple, linear code.
 My public code is available on `github.com/nikandfor/*`, `github.com/tlog-dev/*`, `codeberg.org/nikandfor/*`, `codeberg.org/tlog/*`.
 If in doubt about my style, clone my repos locally and read the real code.
 
+# Workflow
+
+- Check my premises, assumptions, and claims — against the spec or the source, not against your prior. If I'm wrong, or you can't confirm I'm right, say so firmly and reference the source or fact before relaying on the claim.
+- Never commit without my explicit confirmation. Prepare the changes and leave the tree ready — and DON'T remind me or re-list pending batches; I'll ask to commit when I want to.
+
 # Core philosophy (applies to every language)
 
 - Minimal, simple, linear code. Shallow nesting, early returns, small composable verbs.
@@ -19,6 +24,7 @@ If in doubt about my style, clone my repos locally and read the real code.
 - Superseded code and commented-out debug lines are parked temporarily, not forever: keep old versions (`//go:build ignore`) and debug prints around while the new code matures — they're quick reference for importing solutions into the rewrite — then clean them up once it's stable and works fine.
 - Panic loudly on can't-happen (with the offending value), accumulate/return quietly on expected failure.
 - Errors and misuse: errors are for input/environment problems; panics are for programmer bugs.
+- No comments unless the code genuinely needs explanation. Don't restate what the code plainly does; comment only a non-obvious *why*, a subtle invariant, or a gotcha a reader would otherwise miss. Default to none.
 - Output and visual design (logging, CLI output, status lines, and code alike): keep everything calm except essentials — muted/gray for routine values, color only for what needs attention. Structure is implicit, carried by spacing and alignment, not drawn with distracting symbols (pipes, boxes, heavy separators). Care about formatting: aligned variables/values, empty lines between logical blocks, lightweight overall.
 - Iron rules (exceptions super-super rare): every error propagates to the topmost caller (main / connection handler / background-job root); every acquired resource is released on the very next line of the same function (only `if err != nil` may sit between); every started goroutine is waited in the same function that started it.
 

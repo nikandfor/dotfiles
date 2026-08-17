@@ -7,7 +7,13 @@ When a task involves **creating, updating, or running tests**, delegate that wor
 **How to apply:**
 
 - Finish the code change first — compiling and lint-clean — *then* hand off. The repo is shared, so handing off mid-edit risks clobbering.
+- Testing and similar machinery subagents run on the **pre-top-tier model**, but not higher tier than current session runs on, unless it's specified explicitly.
+  For example
+      | Top-tier at the moment | Session    | Testing/Machinery |
+      | Fable5                 | Fable5     | Opus4.8 1M        |
+      | Fable5                 | Opus4.8 1M | Opus4.8 1M        |
+      | Fable5                 | Opus4.6    | Opus4.6           |
 - Give the agent **precise new behavior and selectors**, not vague intent: it can't ask follow-ups mid-task, so spell out what changed and what the tests should now assert.
-- Division of labour: it owns the test files and running the suites. It **fixes tests**; if it suspects a real bug in the source, it **reports** rather than "fixing" it — source/design decisions stay with the main agent.
+- Division of labour: it owns the test files and running the suites. It **updates tests**; if it suspects a real bug in the source, it **reports** rather than "fixing" it — source/design decisions stay with the main agent.
 - Ask for a **terse report**: lint state, pass/fail counts per suite, one line per change. No full file dumps or full command logs.
 - **Reuse the same agent** across the project (continue it, don't spawn fresh) so it keeps context. Spawn a new one only for a genuinely separate project or area.
