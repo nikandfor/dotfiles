@@ -31,6 +31,8 @@
 *.pprof
 *.mprof
 *.trace
+*.pcap
+*.dump
 *.txt
 *.json
 *.jsonl

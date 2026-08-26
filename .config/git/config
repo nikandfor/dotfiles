@@ -1,0 +1,30 @@
+[include]
+	path = config.local
+
+[color]
+	ui = auto
+[core]
+	editor = vim
+[alias]
+	hist = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an]\" --graph --date=short --author-date-order --all
+	histonly = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an]\" --graph --date=short --author-date-order
+	histsigned = log --pretty=format:\"%h %ad | %C(yellow)%s%C(green)%d%C(reset) [%an] %G?\" --graph --date=short --author-date-order
+	st = status
+	co = checkout
+	ci = commit
+	br = branch
+[push]
+	default = current
+[pull]
+	ff = only
+[diff]
+	tool = vim
+[merge]
+	tool = vim
+[credential]
+	helper = store
+[http]
+	cookiefile = ~/.gitcookies
+[init]
+	defaultBranch = main
+	#defaultObjectFormat = sha256

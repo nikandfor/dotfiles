@@ -114,6 +114,7 @@ export GOPATH="$HOME/.go"
 export GOBIN="$GOPATH/bin"
 export PATH="$GOBIN:$PATH"
 export GOWORK=off
+export GOPRIVATE=nikand.dev,tlog.app,tx.fail
 export COMPOSE_BAKE=true
 
 alias gochroma="chroma -l go -f terminal256 -s swapoff"
